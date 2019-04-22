@@ -1,4 +1,4 @@
-package distributed
+package distributed.main
 import distributed.dao.Database
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.Javalin
