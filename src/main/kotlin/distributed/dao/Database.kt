@@ -25,8 +25,8 @@ class Database {
         return itemGroups.values.find { it.name == name }
     }
 
-    fun deleteItemGroup(id: Int) {
-        itemGroups.remove(id)
+    fun deleteItemGroup(name: String) {
+        itemGroups.remove(findByName(name)?.id)
     }
 
     fun getItemGroupsList(): List<ItemGroupDto> {
@@ -34,11 +34,11 @@ class Database {
     }
 
     fun queryItemGroup(itemGroupName: String, itemQuery: String): List<String>? {
-        val itemGroup = findByName(itemGroupName)
+        val itemGroup = findByName(itemGroupName) ?: return emptyList()
         val queryObject = JSONObject(itemQuery)
         if(queryObject.isEmpty)
-            return itemGroup?.items
-        return itemGroup?.items?.filter {
+            return itemGroup.items
+        return itemGroup.items.filter {
             val jsonObject = JSONObject(it)
             queryObject.keySet().any { key -> jsonObject.get(key) == queryObject.get(key) }
         }

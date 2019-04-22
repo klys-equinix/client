@@ -38,8 +38,8 @@ fun main(args: Array<String>) {
             ctx.status(204)
         }
 
-        delete("/item-groups/:id") { ctx ->
-            itemGroupDao.deleteItemGroup(ctx.pathParam("name").toInt())
+        delete("/item-groups/:name") { ctx ->
+            itemGroupDao.deleteItemGroup(ctx.pathParam("name"))
             ctx.status(204)
         }
     }
