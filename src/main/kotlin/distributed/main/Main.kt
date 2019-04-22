@@ -5,11 +5,10 @@ import io.javalin.Javalin
 
 fun main(args: Array<String>) {
     val itemGroupDao = Database()
-
     val app = Javalin.create().apply {
         exception(Exception::class.java) { e, _ -> e.printStackTrace() }
         error(404) { ctx -> ctx.json("not found") }
-    }.start(7000)
+    }.start(if(args[0].isBlank()) 7000 else args[0].toInt())
 
     app.routes {
 
