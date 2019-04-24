@@ -50,7 +50,5 @@ object AppState {
     fun addItemGroup(name: String) {
         val id = lastId.incrementAndGet()
         itemGroups.put(id, ItemGroupMetadata(name = name, id = id, itemCount = 1))
-        val itemGroupsFile = File("collections")
-        itemGroupsFile.appendText("$id $name 1\n")
     }
 }
