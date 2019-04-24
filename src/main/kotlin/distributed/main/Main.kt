@@ -4,23 +4,25 @@ import distributed.dto.NodeStatusDto
 import distributed.util.LoadUtil
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.Javalin
+import java.io.File
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 fun main(args: Array<String>) {
+    AppState.load()
+
     val itemGroupDao = Database()
+
     val app = Javalin.create().apply {
         exception(Exception::class.java) { e, _ -> e.printStackTrace() }
         error(404) { ctx -> ctx.json("not found") }
-    }.start(if(args[0].isBlank()) 7000 else args[0].toInt())
-
-    val nodeName = "Node " + LocalDateTime.now().toInstant(ZoneOffset.UTC).epochSecond
+    }.start(if(args.isNotEmpty()) args[0].toInt() else 7000)
 
     app.routes {
 
         get("/status") { ctx ->
-            ctx.json(NodeStatusDto(nodeName, LoadUtil.getFreeSpacePercentage(), itemGroupDao.getItemGroupsList()))
+            ctx.json(NodeStatusDto(AppState.nodeName, LoadUtil.getFreeSpacePercentage(), AppState.itemGroups.values.toList()))
         }
 
         get("/collections/:name") { ctx ->
