@@ -5,6 +5,7 @@ import distributed.util.LoadUtil
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.Javalin
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 fun main(args: Array<String>) {
@@ -14,7 +15,7 @@ fun main(args: Array<String>) {
         error(404) { ctx -> ctx.json("not found") }
     }.start(if(args[0].isBlank()) 7000 else args[0].toInt())
 
-    val nodeName = "Node " + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
+    val nodeName = "Node " + LocalDateTime.now().toInstant(ZoneOffset.UTC).epochSecond
 
     app.routes {
 
