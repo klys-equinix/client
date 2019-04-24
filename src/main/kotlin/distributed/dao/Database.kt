@@ -1,5 +1,6 @@
 package distributed.dao
 
+import distributed.dto.ItemGroupDto
 import org.json.JSONObject
 import java.util.concurrent.atomic.AtomicInteger
 

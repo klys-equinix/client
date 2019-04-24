@@ -1,7 +1,11 @@
 package distributed.main
 import distributed.dao.Database
+import distributed.dto.NodeStatusDto
+import distributed.util.LoadUtil
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.Javalin
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 fun main(args: Array<String>) {
     val itemGroupDao = Database()
@@ -10,34 +14,36 @@ fun main(args: Array<String>) {
         error(404) { ctx -> ctx.json("not found") }
     }.start(if(args[0].isBlank()) 7000 else args[0].toInt())
 
+    val nodeName = "Node " + LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
+
     app.routes {
 
-        get("/item-groups") { ctx ->
-            ctx.json(itemGroupDao.getItemGroupsList())
+        get("/status") { ctx ->
+            ctx.json(NodeStatusDto(nodeName, LoadUtil.getFreeSpacePercentage(), itemGroupDao.getItemGroupsList()))
         }
 
-        get("/item-groups/:name") { ctx ->
+        get("/collections/:name") { ctx ->
             ctx.json(itemGroupDao.findByName(ctx.pathParam("name"))!!)
         }
 
-        get("/item-groups/:name/query") { ctx ->
+        get("/collections/:name/query") { ctx ->
             val itemQuery = ctx.body()
             ctx.json(itemGroupDao.queryItemGroup(ctx.pathParam("name"), itemQuery)!!)
         }
 
-        post("/item-groups/:name") { ctx ->
+        post("/collections/:name") { ctx ->
             val item = ctx.body()
             itemGroupDao.save(name = ctx.pathParam("name"), item = item)
             ctx.status(201)
         }
 
-        delete("/item-groups/:name/query") { ctx ->
+        delete("/collections/:name/query") { ctx ->
             val itemQuery = ctx.body()
             itemGroupDao.deleteFromItemGroup(itemGroupName = ctx.pathParam("name"), itemQuery = itemQuery)
             ctx.status(204)
         }
 
-        delete("/item-groups/:name") { ctx ->
+        delete("/collections/:name") { ctx ->
             itemGroupDao.deleteItemGroup(ctx.pathParam("name"))
             ctx.status(204)
         }
