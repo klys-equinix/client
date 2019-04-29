@@ -5,7 +5,6 @@ import distributed.util.LoadUtil
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.Javalin
 import java.io.ByteArrayInputStream
-import java.io.InputStream
 
 fun main() {
     AppState.load()
@@ -36,6 +35,11 @@ fun main() {
             val item = ctx.body()
             database.save(name = ctx.pathParam("name"), item = item)
             ctx.status(201)
+        }
+
+        put("/collections/:name/item/:id") { ctx ->
+            val item = ctx.body()
+            database.update(ctx.pathParam("name"), ctx.pathParam("id"), item)
         }
 
         delete("/collections/:name/query") { ctx ->

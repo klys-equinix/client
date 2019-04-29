@@ -8,6 +8,7 @@ import distributed.util.FileUtil.zipFile
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.util.*
 
 class Database {
     fun save(name: String, item: String) {
@@ -40,7 +41,7 @@ class Database {
             lines.filter {
                 val jsonObject = JSONObject(it)
                 queryObject.keySet().any { key ->
-                    if(jsonObject.has(key)) {
+                    if (jsonObject.has(key)) {
                         jsonObject.get(key) == queryObject.get(key)
                     } else false
                 }
@@ -57,11 +58,16 @@ class Database {
         val newItems = getItemsAfterDelete(itemGroupFile, queryObject)
         itemGroup.itemCount = newItems.size
         AppState.itemGroups.put(itemGroup.id, itemGroup)
-        if(newItems.isEmpty()) {
+        if (newItems.isEmpty()) {
             itemGroupFile.delete()
         } else {
-            itemGroupFile.writeText(newItems.reduce { acc, s ->  acc + s})
+            itemGroupFile.writeText(newItems.reduce { acc, s -> acc + s })
         }
+    }
+
+    fun update(itemGroupName: String, id: String, item: String) {
+        val itemGroup = findByName(itemGroupName) ?: throw Exception("Collection unavailable")
+        val itemGroupFile = File(itemGroup.name)
     }
 
     fun getItemGroupFile(itemGroupName: String): ByteArrayOutputStream {
@@ -72,9 +78,13 @@ class Database {
 
     fun importItemGroup(itemGroupsRequestMetadata: String) {
         val itemGroupSourceData = JSONObject(itemGroupsRequestMetadata)
-        val fileStream = downloadFile(itemGroupSourceData.get("url").toString() + "/collections/" + itemGroupSourceData.get("name") + "/" + "copy")
+        val fileStream =
+            downloadFile(itemGroupSourceData.get("url").toString() + "/collections/" + itemGroupSourceData.get("name") + "/" + "copy")
         unzipFile(fileStream, itemGroupSourceData.get("name").toString())
-        AppState.addItemGroup(itemGroupSourceData.get("name").toString(), itemGroupSourceData.get("size").toString().toInt())
+        AppState.addItemGroup(
+            itemGroupSourceData.get("name").toString(),
+            itemGroupSourceData.get("size").toString().toInt()
+        )
     }
 
     private fun getItemsAfterDelete(
@@ -85,7 +95,7 @@ class Database {
             lines.filter {
                 val jsonObject = JSONObject(it)
                 queryObject.keySet().none { key ->
-                    if(jsonObject.has(key)) {
+                    if (jsonObject.has(key)) {
                         jsonObject.get(key) == queryObject.get(key)
                     } else false
                 }
@@ -98,7 +108,10 @@ class Database {
         if (!collectionFile.exists()) {
             collectionFile.createNewFile()
         }
-        File(name).appendText(item.replace("\n", "") + "\n")
+        JSONObject.testValidity(item)
+        val asObject = JSONObject(item)
+        asObject.put("___id___", UUID.randomUUID().toString())
+        File(name).appendText(asObject.toString() + "\n")
     }
 
     private fun deleteCollectionFile(name: String) {
