@@ -55,7 +55,7 @@ class Database {
             return
         val queryObject = JSONObject(itemQuery)
         val itemGroupFile = File(itemGroup.name)
-        val newItems = getItemsAfterDelete(itemGroupFile, queryObject)
+        val newItems = getItemsNotInQuery(itemGroupFile, queryObject)
         itemGroup.itemCount = newItems.size
         AppState.itemGroups.put(itemGroup.id, itemGroup)
         if (newItems.isEmpty()) {
@@ -68,6 +68,14 @@ class Database {
     fun update(itemGroupName: String, id: String, item: String) {
         val itemGroup = findByName(itemGroupName) ?: throw Exception("Collection unavailable")
         val itemGroupFile = File(itemGroup.name)
+        val queryObject = JSONObject()
+        queryObject.put("___id___", id)
+        val notUpdatedItems = getItemsNotInQuery(itemGroupFile, queryObject)
+        val asObject = JSONObject(item)
+        asObject.put("___id___", id)
+        val allObjects = notUpdatedItems.toMutableList()
+        allObjects.add(asObject.toString())
+        itemGroupFile.writeText(allObjects.reduce { acc, s -> acc + s })
     }
 
     fun getItemGroupFile(itemGroupName: String): ByteArrayOutputStream {
@@ -87,7 +95,7 @@ class Database {
         )
     }
 
-    private fun getItemsAfterDelete(
+    private fun getItemsNotInQuery(
         itemGroupFile: File,
         queryObject: JSONObject
     ): List<String> {
