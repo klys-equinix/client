@@ -7,7 +7,7 @@ import io.javalin.Javalin
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 
-fun main(args: Array<String>) {
+fun main() {
     AppState.load()
 
     val database = Database()
@@ -15,7 +15,7 @@ fun main(args: Array<String>) {
     val app = Javalin.create().apply {
         exception(Exception::class.java) { e, _ -> e.printStackTrace() }
         error(404) { ctx -> ctx.json("not found") }
-    }.start(if(args.isNotEmpty()) args[0].toInt() else 7000)
+    }.start(AppState.port)
 
     app.routes {
 

@@ -40,7 +40,9 @@ class Database {
             lines.filter {
                 val jsonObject = JSONObject(it)
                 queryObject.keySet().any { key ->
-                    jsonObject.get(key) == queryObject.get(key)
+                    if(jsonObject.has(key)) {
+                        jsonObject.get(key) == queryObject.get(key)
+                    } else false
                 }
             }.toList()
         }
@@ -82,7 +84,11 @@ class Database {
         return itemGroupFile.useLines { lines ->
             lines.filter {
                 val jsonObject = JSONObject(it)
-                queryObject.keySet().none { key -> jsonObject.get(key) == queryObject.get(key) }
+                queryObject.keySet().none { key ->
+                    if(jsonObject.has(key)) {
+                        jsonObject.get(key) == queryObject.get(key)
+                    } else false
+                }
             }.toList()
         }
     }
