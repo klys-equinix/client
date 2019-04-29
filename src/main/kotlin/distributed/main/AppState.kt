@@ -51,4 +51,9 @@ object AppState {
         val id = lastId.incrementAndGet()
         itemGroups.put(id, ItemGroupMetadata(name = name, id = id, itemCount = 1))
     }
+
+    fun addItemGroup(name: String, size: Int) {
+        val id = lastId.incrementAndGet()
+        itemGroups.put(id, ItemGroupMetadata(name = name, id = id, itemCount = size))
+    }
 }

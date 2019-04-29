@@ -4,15 +4,13 @@ import distributed.dto.NodeStatusDto
 import distributed.util.LoadUtil
 import io.javalin.apibuilder.ApiBuilder.*
 import io.javalin.Javalin
-import java.io.File
-import java.time.LocalDateTime
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
+import java.io.ByteArrayInputStream
+import java.io.InputStream
 
 fun main(args: Array<String>) {
     AppState.load()
 
-    val itemGroupDao = Database()
+    val database = Database()
 
     val app = Javalin.create().apply {
         exception(Exception::class.java) { e, _ -> e.printStackTrace() }
@@ -26,29 +24,42 @@ fun main(args: Array<String>) {
         }
 
         get("/collections/:name") { ctx ->
-            ctx.json(itemGroupDao.findByName(ctx.pathParam("name"))!!)
+            ctx.json(database.findByName(ctx.pathParam("name"))!!)
         }
 
         get("/collections/:name/query") { ctx ->
             val itemQuery = ctx.body()
-            ctx.json(itemGroupDao.queryItemGroup(ctx.pathParam("name"), itemQuery)!!)
+            ctx.json(database.queryItemGroup(ctx.pathParam("name"), itemQuery)!!)
         }
 
         post("/collections/:name") { ctx ->
             val item = ctx.body()
-            itemGroupDao.save(name = ctx.pathParam("name"), item = item)
+            database.save(name = ctx.pathParam("name"), item = item)
             ctx.status(201)
         }
 
         delete("/collections/:name/query") { ctx ->
             val itemQuery = ctx.body()
-            itemGroupDao.deleteFromItemGroup(itemGroupName = ctx.pathParam("name"), itemQuery = itemQuery)
+            database.deleteFromItemGroup(itemGroupName = ctx.pathParam("name"), itemQuery = itemQuery)
             ctx.status(204)
         }
 
         delete("/collections/:name") { ctx ->
-            itemGroupDao.deleteItemGroup(ctx.pathParam("name"))
+            database.deleteItemGroup(ctx.pathParam("name"))
             ctx.status(204)
+        }
+
+        post("/collections/:name/copy") {ctx ->
+            val itemGroupsRequestMetadata = ctx.body()
+            database.importItemGroup(itemGroupsRequestMetadata)
+            ctx.status(201)
+        }
+
+        get("/collections/:name/copy") {ctx ->
+            val itemGroupName = ctx.pathParam("name")
+            val zippedFile = database.getItemGroupFile(itemGroupName)
+            ctx.header("Content-Disposition", "attachment; $itemGroupName.zip")
+            ctx.result(ByteArrayInputStream(zippedFile.toByteArray()))
         }
     }
 }

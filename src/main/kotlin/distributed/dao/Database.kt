@@ -2,7 +2,11 @@ package distributed.dao
 
 import distributed.dto.ItemGroupMetadata
 import distributed.main.AppState
+import distributed.util.FileUtil.downloadFile
+import distributed.util.FileUtil.unzipFile
+import distributed.util.FileUtil.zipFile
 import org.json.JSONObject
+import java.io.ByteArrayOutputStream
 import java.io.File
 
 class Database {
@@ -43,23 +47,43 @@ class Database {
     }
 
     fun deleteFromItemGroup(itemGroupName: String, itemQuery: String) {
-        val itemGroup = findByName(itemGroupName) ?: return
+        val itemGroup = findByName(itemGroupName) ?: throw Exception("Collection unavailable")
         val queryObject = JSONObject(itemQuery)
         if (queryObject.isEmpty)
             return
         val itemGroupFile = File(itemGroup.name)
-        val newItems = itemGroupFile.useLines { lines ->
-            lines.filter {
-                val jsonObject = JSONObject(it)
-                queryObject.keySet().none { key -> jsonObject.get(key) == queryObject.get(key) }
-            }.toList()
-        }
+        val newItems = getItemsAfterDelete(itemGroupFile, queryObject)
         itemGroup.itemCount = newItems.size
         AppState.itemGroups.put(itemGroup.id, itemGroup)
         if(newItems.isEmpty()) {
             itemGroupFile.delete()
         } else {
             itemGroupFile.writeText(newItems.reduce { acc, s ->  acc + s})
+        }
+    }
+
+    fun getItemGroupFile(itemGroupName: String): ByteArrayOutputStream {
+        val itemGroup = findByName(itemGroupName) ?: throw Exception("Collection unavailable")
+        val itemGroupFile = File(itemGroup.name)
+        return zipFile(itemGroupFile, itemGroup.name)
+    }
+
+    fun importItemGroup(itemGroupsRequestMetadata: String) {
+        val itemGroupSourceData = JSONObject(itemGroupsRequestMetadata)
+        val fileStream = downloadFile(itemGroupSourceData.get("url").toString() + "/collections/" + itemGroupSourceData.get("name") + "/" + "copy")
+        unzipFile(fileStream, itemGroupSourceData.get("name").toString())
+        AppState.addItemGroup(itemGroupSourceData.get("name").toString(), itemGroupSourceData.get("size").toString().toInt())
+    }
+
+    private fun getItemsAfterDelete(
+        itemGroupFile: File,
+        queryObject: JSONObject
+    ): List<String> {
+        return itemGroupFile.useLines { lines ->
+            lines.filter {
+                val jsonObject = JSONObject(it)
+                queryObject.keySet().none { key -> jsonObject.get(key) == queryObject.get(key) }
+            }.toList()
         }
     }
 
