@@ -33,9 +33,9 @@ class Database {
     fun queryItemGroup(itemGroupName: String, itemQuery: String): List<String>? {
         val itemGroup = findByName(itemGroupName) ?: return emptyList()
         val itemGroupFile = File(itemGroup.name)
-        val queryObject = JSONObject(itemQuery)
-        if (queryObject.isEmpty)
+        if (itemQuery.isBlank())
             return itemGroupFile.useLines { lines -> lines.toList() }
+        val queryObject = JSONObject(itemQuery)
         return itemGroupFile.useLines { lines ->
             lines.filter {
                 val jsonObject = JSONObject(it)
@@ -50,9 +50,9 @@ class Database {
 
     fun deleteFromItemGroup(itemGroupName: String, itemQuery: String) {
         val itemGroup = findByName(itemGroupName) ?: throw Exception("Collection unavailable")
-        val queryObject = JSONObject(itemQuery)
-        if (queryObject.isEmpty)
+        if (itemQuery.isBlank())
             return
+        val queryObject = JSONObject(itemQuery)
         val itemGroupFile = File(itemGroup.name)
         val newItems = getItemsAfterDelete(itemGroupFile, queryObject)
         itemGroup.itemCount = newItems.size
