@@ -35,7 +35,9 @@ class Database {
         return itemGroupFile.useLines { lines ->
             lines.filter {
                 val jsonObject = JSONObject(it)
-                queryObject.keySet().any { key -> jsonObject.get(key) == queryObject.get(key) }
+                queryObject.keySet().any { key ->
+                    jsonObject.get(key) == queryObject.get(key)
+                }
             }.toList()
         }
     }
