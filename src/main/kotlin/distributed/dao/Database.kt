@@ -1,5 +1,7 @@
 package distributed.dao
 
+import distributed.dao.QueryHandler.getItemsInQuery
+import distributed.dao.QueryHandler.getItemsNotInQuery
 import distributed.dto.ItemGroupMetadata
 import distributed.main.AppState
 import distributed.util.FileUtil.downloadFile
@@ -37,16 +39,7 @@ class Database {
         if (itemQuery.isBlank())
             return itemGroupFile.useLines { lines -> lines.toList() }
         val queryObject = JSONObject(itemQuery)
-        return itemGroupFile.useLines { lines ->
-            lines.filter {
-                val jsonObject = JSONObject(it)
-                queryObject.keySet().any { key ->
-                    if (jsonObject.has(key)) {
-                        jsonObject.get(key) == queryObject.get(key)
-                    } else false
-                }
-            }.toList()
-        }
+        return getItemsInQuery(itemGroupFile, queryObject)
     }
 
     fun deleteFromItemGroup(itemGroupName: String, itemQuery: String) {
@@ -93,22 +86,6 @@ class Database {
             metadata.name,
             metadata.itemCount
         )
-    }
-
-    private fun getItemsNotInQuery(
-        itemGroupFile: File,
-        queryObject: JSONObject
-    ): List<String> {
-        return itemGroupFile.useLines { lines ->
-            lines.filter {
-                val jsonObject = JSONObject(it)
-                queryObject.keySet().none { key ->
-                    if (jsonObject.has(key)) {
-                        jsonObject.get(key) == queryObject.get(key)
-                    } else false
-                }
-            }.toList()
-        }
     }
 
     private fun addToCollection(name: String, item: String) {
