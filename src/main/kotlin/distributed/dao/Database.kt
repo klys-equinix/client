@@ -50,7 +50,7 @@ class Database {
     }
 
     fun deleteFromItemGroup(itemGroupName: String, itemQuery: String) {
-        val itemGroup = findByName(itemGroupName) ?: throw Exception("Collection unavailable")
+        val itemGroup = findByName(itemGroupName) ?: throw RuntimeException("Collection unavailable")
         if (itemQuery.isBlank())
             return
         val queryObject = JSONObject(itemQuery)
@@ -66,7 +66,7 @@ class Database {
     }
 
     fun update(itemGroupName: String, id: String, item: String) {
-        val itemGroup = findByName(itemGroupName) ?: throw Exception("Collection unavailable")
+        val itemGroup = findByName(itemGroupName) ?: throw RuntimeException("Collection unavailable")
         val itemGroupFile = File(itemGroup.name)
         val queryObject = JSONObject()
         queryObject.put("___id___", id)
@@ -79,19 +79,19 @@ class Database {
     }
 
     fun getItemGroupFile(itemGroupName: String): ByteArrayOutputStream {
-        val itemGroup = findByName(itemGroupName) ?: throw Exception("Collection unavailable")
+        val itemGroup = findByName(itemGroupName) ?: throw RuntimeException("Collection unavailable")
         val itemGroupFile = File(itemGroup.name)
-        return zipFile(itemGroupFile, itemGroup.name)
+        return zipFile(itemGroupFile, itemGroup)
     }
 
     fun importItemGroup(itemGroupsRequestMetadata: String) {
         val itemGroupSourceData = JSONObject(itemGroupsRequestMetadata)
         val fileStream =
             downloadFile(itemGroupSourceData.get("url").toString() + "/collections/" + itemGroupSourceData.get("name") + "/" + "copy")
-        unzipFile(fileStream, itemGroupSourceData.get("name").toString())
+        val metadata = unzipFile(fileStream, itemGroupSourceData.get("name").toString()) ?: throw RuntimeException("Unzip failed")
         AppState.addItemGroup(
-            itemGroupSourceData.get("name").toString(),
-            itemGroupSourceData.get("size").toString().toInt()
+            metadata.name,
+            metadata.itemCount
         )
     }
 
